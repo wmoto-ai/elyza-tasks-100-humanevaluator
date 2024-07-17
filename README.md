@@ -1,6 +1,6 @@
 # Elyza Tasks 100 人間評価システム
 
-このプロジェクトは、Elyza Tasks 100の質問に対するユーザーの回答をGPT-4oの採点してもらって他のAIモデルの結果と比較できるアプリケーションです。
+このプロジェクトは、Elyza Tasks 100の質問に対するユーザーの回答をGPT-4oに採点してもらって他のAIモデルの結果と比較できるアプリケーションです。
 
 ![出題解答画面イメージ](images/exam-image.png)
 
@@ -8,7 +8,7 @@
 
 - ユーザーが質問に回答し、GPT-4oによる採点を受けることができます。
 - 採点結果とフィードバックを表示します。
-- ユーザーのスコアを他のAIモデル（HODACHI/EZO-Humanities-9B-gemma-2-it、GPT-4、Claude 3.5 Sonnet）と比較するグラフを表示します。
+- ユーザーのスコアを他のAIモデル（HODACHI/EZO-Humanities-9B-gemma-2-it、GPT-4o、Claude 3.5 Sonnet）と比較するグラフを表示します。
 - 結果の表示/非表示を切り替えることができます。
 - 回答した結果と採点結果は`data/results.csv`ファイルに蓄積されます。
 
