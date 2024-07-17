@@ -42,7 +42,7 @@
 3. Dockerコンテナをビルドして起動します：
 
    ```
-   docker compose up --build
+   docker compose up -d
    ```
 
 4. アプリケーションが起動したら、ブラウザで `http://localhost:8080` にアクセスします。
