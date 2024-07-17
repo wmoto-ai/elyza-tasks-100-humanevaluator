@@ -2,7 +2,7 @@
 
 このプロジェクトは、Elyza Tasks 100の質問に対するユーザーの回答をGPT-4oに採点してもらって他のAIモデルの結果と比較できるアプリケーションです。
 
-![出題解答画面イメージ](images/exam-image.png)
+![出題解答画面イメージ](images/answering-image.png)
 
 ## 機能
 
