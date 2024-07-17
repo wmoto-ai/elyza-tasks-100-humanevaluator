@@ -61,32 +61,30 @@ sessions = {}
 def create_session(username):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     session_id = f"{username}_{timestamp}"
-    filename = f"results_{session_id}.csv"
     sessions[session_id] = {
-        "filename": filename,
         "current_task_index": 0,
-        "username": username  # ユーザー名を保存
+        "username": username
     }
-    
-    with open(filename, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['Task ID', 'Instruction', 'Answer', 'Score', 'Reason'])
-    
     return session_id
 
 def save_result_to_csv(session_id, task_id, instruction, answer, score, reason):
-    filename = sessions[session_id]["filename"]
+    filename = os.path.join(os.path.dirname(__file__), "..", "data", "results.csv")
+    file_exists = os.path.exists(filename)
+    
     with open(filename, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow([task_id, instruction, answer, score, reason])
+        if not file_exists:
+            writer.writerow(['user_name', 'session_id', 'task_id', 'instruction', 'answer', 'score', 'reason', 'timestamp'])
+        writer.writerow([sessions[session_id]["username"], session_id, task_id, instruction, answer, score, reason, datetime.now().isoformat()])
 
 def get_average_score(session_id):
-    filename = sessions[session_id]["filename"]
+    filename = os.path.join(os.path.dirname(__file__), "..", "data", "results.csv")
     scores = []
     with open(filename, 'r', newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            scores.append(float(row['Score']))
+            if row['session_id'] == session_id:
+                scores.append(float(row['score']))
     return sum(scores) / len(scores) if scores else 0
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(10))
@@ -162,14 +160,11 @@ async def submit_answer(answer: Answer):
             model=GPT_MODEL
         )
         
-        # Save result to CSV
         save_result_to_csv(answer.session_id, task["id"], task["input"], answer.answer, result["grade"], result["reason"])
         
-        # Move to next task
         sessions[answer.session_id]["current_task_index"] += 1
         next_task = await get_task(answer.session_id)
         
-        # Calculate user's average score
         user_average_score = get_average_score(answer.session_id)
         
         return JSONResponse(content={
@@ -190,12 +185,12 @@ async def get_results(session_id: str):
     user_average_score = get_average_score(session_id)
     return {
         "user_score": user_average_score,
-        "gpt4_score": 4.5,
-        "claude_haiku_score": 4.0,
-        "claude_opus_score": 4.7,
-        "username": sessions[session_id]["username"]  # ユーザー名を返す
+        "EZO_Humanities_score": 4.09,
+        "gpt4o_score": 4.35,
+        "claude35_sonnet_score": 4.53,
+        "username": sessions[session_id]["username"]
     }
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8080)
