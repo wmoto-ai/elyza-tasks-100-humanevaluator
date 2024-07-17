@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elyza Tasks 100</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-3xl mx-auto bg-white p-8 rounded shadow-md">
+        <h1 class="text-3xl font-bold mb-6 text-center">Elyza Tasks 100</h1>
+        
+        <div id="start-session" class="mb-6">
+            <input type="text" id="username" placeholder="Enter your name" class="w-full border p-2 mb-2 rounded">
+            <button onclick="startSession()" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                始める
+            </button>
+        </div>
+
+        <div id="task-container" class="mb-6 hidden"></div>
+
+        <form id="answer-form" class="mb-6 hidden">
+            <input type="hidden" id="task-id" name="task_id">
+            <textarea id="answer" name="answer" class="w-full p-2 border rounded" rows="6" placeholder="Your answer here"></textarea>
+            <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded mt-2 hover:bg-green-600 transition">Submit</button>
+        </form>
+
+        <div id="loading" class="hidden mb-6">
+            <div class="spinner mx-auto"></div>
+            <p class="text-center mt-2">採点中...</p>
+        </div>
+
+        <div class="mb-6">
+            <label class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-results" class="sr-only peer" checked>
+                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">結果を表示</span>
+            </label>
+        </div>
+
+        <div id="results-container" class="mb-6">
+            <div id="result" class="mb-4 p-4 bg-gray-100 rounded"></div>
+
+            <div>
+                <h2 class="text-xl font-bold mb-2">Results</h2>
+                <canvas id="resultsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let chart = null;
+        let username = '';
+
+        function startSession() {
+            username = document.getElementById('username').value;
+            if (!username) {
+                alert('Please enter your name');
+                return;
+            }
+
+            fetch('/api/start_session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                sessionId = data.session_id;
+                document.getElementById('start-session').classList.add('hidden');
+                document.getElementById('task-container').classList.remove('hidden');
+                document.getElementById('answer-form').classList.remove('hidden');
+                getNextTask();
+                updateChart(0);  // Initialize chart with 0 score
+            });
+        }
+
+        function getNextTask() {
+            fetch(`/api/task?session_id=${sessionId}`)
+                .then(response => response.json())
+                .then(task => displayTask(task));
+        }
+
+        function displayTask(task) {
+            const taskContainer = document.getElementById('task-container');
+            document.getElementById('task-id').value = task.id;
+            if (task.id === "end") {
+                taskContainer.innerHTML = `<p class="mb-2 text-lg font-semibold">All tasks completed!</p>`;
+                document.getElementById('answer-form').classList.add('hidden');
+            } else {
+                taskContainer.innerHTML = `
+                    <p class="mb-2 text-sm text-gray-600"><strong>Task ID:</strong> ${task.id}</p>
+                    <p class="mb-2 text-lg"><strong>Question:</strong> ${task.description}</p>
+                `;
+            }
+        }
+
+        document.getElementById('answer-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const taskId = document.getElementById('task-id').value;
+            const answer = document.getElementById('answer').value;
+            
+            // Show loading animation
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('result').innerHTML = '';
+            
+            fetch('/api/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ task_id: taskId, answer: answer, session_id: sessionId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide loading animation
+                document.getElementById('loading').classList.add('hidden');
+                
+                document.getElementById('result').innerHTML = `
+                    <p class="mb-2"><strong>Score:</strong> ${data.score}</p>
+                    <p><strong>Feedback:</strong> ${data.reason}</p>
+                `;
+                updateChart(data.user_average_score);
+                displayTask(data.next_task);
+                document.getElementById('answer').value = '';  // Clear the answer field
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Hide loading animation
+                document.getElementById('loading').classList.add('hidden');
+                
+                document.getElementById('result').innerHTML = `
+                    <p class="text-red-500"><strong>Error:</strong> Failed to submit answer. Please try again.</p>
+                `;
+            });
+        });
+
+        function updateChart(userScore) {
+            fetch(`/api/results?session_id=${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('resultsChart').getContext('2d');
+                    if (chart) {
+                        chart.destroy();  // Destroy existing chart if it exists
+                    }
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: [username, 'GPT-4', 'Claude Haiku', 'Claude Opus'],
+                            datasets: [{
+                                label: 'Scores',
+                                data: [data.user_score, data.gpt4_score, data.claude_haiku_score, data.claude_opus_score],
+                                backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)'],
+                                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 5
+                                }
+                            }
+                        }
+                    });
+                });
+        }
+
+        // Toggle results visibility
+        document.getElementById('toggle-results').addEventListener('change', function(e) {
+            const resultsContainer = document.getElementById('results-container');
+            if (e.target.checked) {
+                resultsContainer.classList.remove('hidden');
+            } else {
+                resultsContainer.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# Python template (これは GitHub が自動生成)
+
+# プロジェクト固有の追加項目
+.env
+*.csv
+results_*.csv
+data/
+
+# Docker
+docker-compose.override.yml
+
+# IDEs and editors (必要に応じて)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files (必要に応じて)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
