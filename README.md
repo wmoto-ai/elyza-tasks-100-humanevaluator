@@ -32,7 +32,7 @@
 
    ```
    OPENAI_API_KEY=your_openai_api_key_here
-   GPT_MODEL=gpt-4
+   GPT_MODEL=gpt-4o
    ```
 
    OpenAI APIキーを取得し、上記の`your_openai_api_key_here`に置き換えてください。
