@@ -26,8 +26,8 @@
 1. このリポジトリをクローンします：
 
    ```
-   git clone https://github.com/wmoto-ai/elyza-tasks-100-evaluator.git
-   cd elyza-tasks-100-evaluator
+   git clone https://github.com/wmoto-ai/elyza-tasks-100-humanevaluator.git
+   cd elyza-tasks-100-humanevaluator
    ```
 
 2. `.env`ファイルを作成し、必要な環境変数を設定します：
