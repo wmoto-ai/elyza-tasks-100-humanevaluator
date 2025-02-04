@@ -1,9 +1,40 @@
-# Python template (これは GitHub が自動生成)
+# Python template
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+ENV/
 
 # プロジェクト固有の追加項目
 .env
 *.csv
 results_*.csv
+
+# Testing / Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Logs
+*.log
+logs/
 
 # Docker
 docker-compose.override.yml
@@ -13,6 +44,8 @@ docker-compose.override.yml
 .idea/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
 # OS generated files (必要に応じて)
 .DS_Store
@@ -22,3 +55,8 @@ docker-compose.override.yml
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# その他のキャッシュ
+.cache/
+.mypy_cache/
+.pytest_cache/
